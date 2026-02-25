@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Simples</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #eb297a 0%, #764ba2 100%);
+            margin: 0;
+        }
+
+        .calculator {
+            background-color: #2d3e50;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 320px;
+        }
+
+        .display {
+            background-color: #1e2b3a;
+            color: white;
+            font-size: 2.5em;
+            text-align: right;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            border: 2px solid #3d5a73;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            color: white;
+        }
+
+        button:hover {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .number {
+            background-color: #3d5a73;
+        }
+
+        .number:hover {
+            background-color: #4d7a5a;
+        }
+
+        .operator {
+            background-color: #a112f3;
+        }
+
+        .operator:hover {
+            background-color: #e67e22;
+        }
+
+        .equals {
+            background-color: #27ae60;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background-color: #229954;
+        }
+
+        .clear {
+            background-color: #e74c3c;
+        }
+
+        .clear:hover {
+            background-color: #c0392b;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        .decimal {
+            background-color: #e22b87;
+        }
+
+        .percent {
+            background-color: #3498db;
+        }
+
+        .percent:hover {
+            background-color: #2980b9;
+        }
+
+        .history {
+            color: #aaa;
+            font-size: 0.8em;
+            text-align: right;
+            margin-bottom: 5px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="history" id="history"></div>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="operator" onclick="appendOperator('/')">÷</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
+            <button class="operator" onclick="appendOperator('-')">−</button>
+            
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="percent" onclick="calculatePercentage()">%</button>
+            
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="decimal" onclick="appendDecimal()">.</button>
+            
+            <button class="number zero" onclick="appendNumber('0')">0</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let history = document.getElementById('history');
+        let currentInput = '';
+        let previousInput = '';
+        let operator = '';
+        let shouldResetDisplay = false;
+        let lastResult = null;
+
+        // Função para atualizar o display
+        function updateDisplay(value) {
+            display.textContent = value || '0';
+        }
+
+        // Função para limpar tudo
+        function clearDisplay() {
+            currentInput = '';
+            previousInput = '';
+            operator = '';
+            shouldResetDisplay = false;
+            lastResult = null;
+            updateDisplay('0');
+            history.textContent = '';
+        }
+
+        // Função para adicionar números
+        function appendNumber(number) {
+            if (shouldResetDisplay) {
+                currentInput = '';
+                shouldResetDisplay = false;
+            }
+            
+            // Evitar múltiplos zeros no início
+            if (number === '0' && currentInput === '0') {
+                return;
+            }
+            
+            // Se for o primeiro número e for zero, substitui
+            if (currentInput === '0') {
+                currentInput = number;
+            } else {
+                currentInput += number;
+            }
+            
+            updateDisplay(currentInput);
+        }
+
+        // Função para adicionar ponto decimal
+        function appendDecimal() {
+            if (shouldResetDisplay) {
+                currentInput = '';
+                shouldResetDisplay = false;
+            }
+            
+            // Se não há número atual, começa com "0."
+            if (currentInput === '') {
+                currentInput = '0.';
+            } 
+            // Se já tem ponto, não adiciona outro
+            else if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            
+            updateDisplay(currentInput);
+        }
+
+        // Função para adicionar operadores
+        function appendOperator(op) {
+            // Se não há entrada atual e não há operador anterior, não faz nada
+            if (currentInput === '' && previousInput === '') {
+                return;
+            }
+            
+            // Se já existe um operador e uma entrada atual, calcula primeiro
+            if (operator && currentInput !== '') {
+                calculate();
+            }
+            
+            operator = op;
+            
+            // Se não há entrada atual mas há resultado anterior, usa o resultado
+            if (currentInput === '' && lastResult !== null) {
+                previousInput = lastResult.toString();
+            } else {
+                previousInput = currentInput || previousInput;
+            }
+            
+            currentInput = '';
+            shouldResetDisplay = false;
+            
+            // Mostra a operação no histórico
+            history.textContent = `${previousInput} ${getOperatorSymbol(op)}`;
+        }
+
+        // Função para obter o símbolo do operador
+        function getOperatorSymbol(op) {
+            const symbols = {
+                '+': '+',
+                '-': '−',
+                '*': '×',
+                '/': '÷'
+            };
+            return symbols[op] || op;
+        }
+
+        // Função para calcular porcentagem
+        function calculatePercentage() {
+            if (currentInput === '') return;
+            
+            let value = parseFloat(currentInput);
+            
+            // Se há uma operação pendente, calcula a porcentagem em relação ao número anterior
+            if (operator && previousInput !== '') {
+                let prev = parseFloat(previousInput);
+                let percentage;
+                
+                switch(operator) {
+                    case '+':
+                    case '-':
+                        // Para adição/subtração, porcentagem do número anterior
+                        percentage = prev * (value / 100);
+                        break;
+                    case '*':
+                    case '/':
+                        // Para multiplicação/divisão, converte para decimal
+                        percentage = value / 100;
+                        break;
+                    default:
+                        percentage = value / 100;
+                }
+                
+                currentInput = percentage.toString();
+            } else {
+                // Se não há operação, apenas converte para decimal
+                currentInput = (value / 100).toString();
+            }
+            
+            updateDisplay(currentInput);
+            shouldResetDisplay = true;
+        }
+
+        // Função principal de cálculo
+        function calculate() {
+            if (previousInput === '' || currentInput === '' || !operator) {
+                return;
+            }
+            
+            let prev = parseFloat(previousInput);
+            let current = parseFloat(currentInput);
+            let result;
+            
+            // Verifica se são números válidos
+            if (isNaN(prev) || isNaN(current)) {
+                updateDisplay('Erro');
+                return;
+            }
+            
+            // Realiza a operação baseada no operador
+            switch(operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        updateDisplay('Erro: Divisão por 0');
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Arredonda para evitar problemas com decimais
+            result = Math.round(result * 1000000) / 1000000;
+            
+            // Atualiza o histórico
+            history.textContent = `${previousInput} ${getOperatorSymbol(operator)} ${currentInput} =`;
+            
+            // Armazena o resultado
+            lastResult = result;
+            currentInput = result.toString();
+            previousInput = '';
+            operator = '';
+            shouldResetDisplay = true;
+            
+            updateDisplay(result);
+        }
+
+        // Adiciona suporte para teclado
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            
+            // Números
+            if (/[0-9]/.test(key)) {
+                appendNumber(key);
+            }
+            // Operadores
+            else if (key === '+') {
+                appendOperator('+');
+            }
+            else if (key === '-') {
+                appendOperator('-');
+            }
+            else if (key === '*') {
+                appendOperator('*');
+            }
+            else if (key === '/') {
+                appendOperator('/');
+            }
+            // Enter ou = para calcular
+            else if (key === 'Enter' || key === '=') {
+                calculate();
+            }
+            // Backspace para limpar
+            else if (key === 'Backspace') {
+                clearDisplay();
+            }
+            // Ponto decimal
+            else if (key === '.') {
+                appendDecimal();
+            }
+            // Escape para limpar
+            else if (key === 'Escape') {
+                clearDisplay();
+            }
+            // Porcentagem
+            else if (key === '%') {
+                calculatePercentage();
+            }
+        });
+    </script>
+</body>
+</html>
